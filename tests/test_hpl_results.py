@@ -67,7 +67,7 @@ class TestHplResults(unittest.TestCase):
 
     def test_write_results_to_csv(self) -> None:
         hpL_results = HplResultsFile.read_result_file("./data/HPL.out")
-        test_file = "./data/hplx.out.csv"
+        test_file = "./data/output/hplx.out.csv"
         HplResultsFile.write_results_to_csv(test_file, hpL_results)
         with open("./data/HPL.csv","r") as file:
             expected_csv = file.readlines()
