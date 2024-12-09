@@ -1,3 +1,3 @@
-from hmxlabs.sysinfo import hplx
+from hmxlabs.hplx import hplx
 
 hplx.main()
