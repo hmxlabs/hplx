@@ -70,10 +70,10 @@ class TestHplResults(unittest.TestCase):
         test_file = "./data/output/hplx.out.csv"
         HplResultsFile.write_results_to_csv(test_file, hpL_results)
         with open("./data/HPL.csv","r") as file:
-            expected_csv = file.readlines()
+            expected_csv = file.read()
 
         with open(test_file,"r") as file:
-            generated_csv = file.readlines()
+            generated_csv = file.read()
 
         self.assertEqual(expected_csv, generated_csv, "The generated CSV file did not match the expected CSV file")
 

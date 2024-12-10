@@ -11,7 +11,7 @@ class TestHplInputFileGenerator(unittest.TestCase):
                                                   "HPL.TEST.dat", True)
 
         with open("./data/HPL.dat", "r") as file:
-            expected_output = file.readlines()
+            expected_output = file.read()
 
         self.assertEqual(expected_output, output, "The generated HPL input file did not match the expected output")
 
