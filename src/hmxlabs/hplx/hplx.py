@@ -1,5 +1,12 @@
 import argparse
+import os
 import sys
+import psutil
+import subprocess
+from pathlib import Path
+from hmxlabs.hplx.hpl_input import HplInputFileGenerator
+from hmxlabs.hplx.hpl_results import HplResult, HplResultsFile
+
 
 def main():
     setup_argparse()
@@ -19,8 +26,8 @@ def setup_argparse():
     parser_input.add_argument("--output", dest="output", required=False, action="store_true", default=False,
                                   help="The name of HPL input file to generate")
 
-    parser_find_optimal = subparsers.add_parser("find_optimal", help="Find optimal HPLinpack parameters via exectution")
-    parser_find_optimal.set_defaults(func=find_optimal)
+    parser_find_optimal = subparsers.add_parser("calc_optimal", help="Find optimal HPLinpack parameters via exectution")
+    parser_find_optimal.set_defaults(func=calc_optimal)
 
     try:
         args = argparser.parse_args()
@@ -35,8 +42,58 @@ def process_output(args):
 def generate_input(args):
     print("Generating input")
 
-def find_optimal(args):
+def get_hpl_exec_command(cpu_count: int) -> str:
+    hpl_cmd = os.environ.get("HPL_EXEC", None)
+    if not hpl_cmd:
+        print("HPL_EXEC environment variable not set", file=sys.stderr)
+        sys.exit(1)
+
+    return hpl_cmd.replace("$CPUS$", str(cpu_count))
+
+def calc_optimal(args):
     print("Finding optimal parameters")
+    # Approach here is to
+    # 1. Run with multuple process grids and a fixed small problem size
+    # 2. From the output select the best performing grid and then run with multiple problem sizes
+    # 3. From the output select the best performing problem size
+
+    input_file = "./HPL.dat"
+    # Check if the input file exists and delete it if it does
+    if Path(input_file).exists():
+        Path(input_file).unlink()
+
+    cpu_count = psutil.cpu_count(logical=False)
+    available_memory = psutil.virtual_memory()
+
+    proc_grid_file = "./HPL_PROD_GRID.out"
+    if Path(proc_grid_file).exists():
+        Path(proc_grid_file).unlink()
+
+    hpl_dat = HplInputFileGenerator.generate_input_file_calc_best_process_grid(cpu_count, True, proc_grid_file)
+    with open(input_file, "w") as file:
+        file.write(hpl_dat)
+        file.close()
+
+    if not Path(input_file).exists():
+        print(f"Error creating HPL input file {input_file}", file=sys.stderr)
+        sys.exit(1)
+
+    print("Running HPL to determine process grid")
+    hpl_cmd = get_hpl_exec_command(cpu_count)
+    subprocess.Popen(hpl_cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE).wait()
+
+    if not (Path(proc_grid_file).exists()):
+        print(f"Error creating HPL process grid file {proc_grid_file}", file=sys.stderr)
+        sys.exit(1)
+
+    proc_grid_results = HplResultsFile.read_result_file(proc_grid_file)
+    
+
+
+
+
+
+
 
 if __name__ == "__main__":
     main()
