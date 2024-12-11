@@ -91,6 +91,7 @@ class HplInputFileGenerator:
 
         return best_params
 
+
     @staticmethod
     def generate_possible_process_grids(cpu_count: int) -> ([int], [int]):
         """
@@ -105,17 +106,57 @@ class HplInputFileGenerator:
                     process_grids[1].append(Q)
         return process_grids
 
-    @staticmethod
-    def calculate_max_problem_size(available_memory: int) -> int:
-        num_doubles = available_memory / 8
-        return int(math.sqrt(num_doubles))
 
     @staticmethod
-    def generate_possible_problem_sizes(min_n: int = MIN_N, max_n:int = MAX_N, step_n:int = STEP_N) -> [int]:
-        """
-            This function generates a list of problem sizes to solve for
-        """
-        return list(range(min_n, max_n + 1, step_n))
+    def calculate_max_problem_size(available_memory: int) -> int:
+        # Apply a conservative estimate of 80% of memory can actually be used
+        # without starving the system. Assume a double precision matrix and a double is 8 bytes
+        num_doubles = available_memory*0.8 / 8
+        return int(math.sqrt(num_doubles))
+
+
+    @staticmethod
+    def generate_input_file_calc_best_process_grid(cpu_count: int, write_file: bool, output_file: str, row_major: bool) -> str:
+        process_grid = HplInputFileGenerator.generate_possible_process_grids(cpu_count)
+        # Use a very small problem size to calculate the best process grid to minimise compute time
+        # as the variation due to block size and problem size is minimal in determining the best grid
+        return HplInputFileGenerator.generate_input_file([1000], [64], process_grid[0], process_grid[1], write_file, output_file, row_major)
+
+
+    @staticmethod
+    def generate_possible_problem_sizes(available_memory: int) -> [int]:
+        max_problem_size = HplInputFileGenerator.calculate_max_problem_size(available_memory)
+        # Bit of a random guess here but use 1/8th of the max problem size as the minimum to try and guess a range
+        min_problem_size = int(max_problem_size / 8)
+        step_size = int((max_problem_size - min_problem_size) / 10)
+        if 1000 > min_problem_size:
+            min_problem_size = 1000
+        return list(range(min_problem_size, max_problem_size + 1, step_size))
+
+
+    @staticmethod
+    def generate_possible_block_sizes(n: int) -> [int]:
+        # The most likely theoretical best block size is sqrt(n)
+        theoretical_best_block_size = int(math.sqrt(n))
+        min_nb = int(theoretical_best_block_size/4)
+        max_nb = int(theoretical_best_block_size * 2)
+
+        if 32 > min_nb:
+            min_nb = 32
+
+        if 256 < max_nb:
+            max_nb = 256
+
+        step = int((max_nb-min_nb) / 5)
+        return list(range(min_nb, max_nb + 1, step))
+
+    @staticmethod
+    def generate_input_file_calc_best_problem_size(available_memory: int, p: [int], q: [int], write_file: bool, output_file: str, row_major: bool) -> str:
+        problem_sizes = HplInputFileGenerator.generate_possible_problem_sizes(available_memory)
+        max_problem_size = problem_sizes[-1]
+        block_sizes = HplInputFileGenerator.generate_possible_block_sizes(max_problem_size)
+
+        return HplInputFileGenerator.generate_input_file(problem_sizes, block_sizes, p, q, write_file, output_file, row_major)
 
     @staticmethod
     def generate_input_file(n: [int], nb: [int], p: [int], q: [int], write_file: bool, output_file: str, row_major: bool) -> str:

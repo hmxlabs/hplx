@@ -47,3 +47,14 @@ class TestHplInputFileGenerator(unittest.TestCase):
         params = HplInputFileGenerator.generate_theoretical_best_inputs(cpu_count, available_memory_gb)
 
         self.assertEqual(cpu_count, params[2]*params[3], "The value of P*Q was not as the cpu count")
+
+    def test_generate_possible_problem_sizes(self) -> None:
+        sizes = HplInputFileGenerator.generate_possible_problem_sizes(16*1024*1024*1024)
+        self.assertLess(10, len(sizes), "The number of possible problem sizes was not as expected")
+        self.assertGreater(10000, sizes[0], "The value of N was not as expected")
+
+    def test_generate_block_sizes(self) -> None:
+        prob_sizes  = HplInputFileGenerator.generate_possible_problem_sizes(16*1024*1024*1024)
+        block_sizes = HplInputFileGenerator.generate_possible_block_sizes(prob_sizes[-1])
+        self.assertEqual(6, len(block_sizes), "The number of possible block sizes was not as expected")
+        self.assertGreater(256, block_sizes[-1], "The value of NB was not as expected")
