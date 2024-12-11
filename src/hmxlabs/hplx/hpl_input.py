@@ -92,6 +92,32 @@ class HplInputFileGenerator:
         return best_params
 
     @staticmethod
+    def generate_possible_process_grids(cpu_count: int) -> ([int], [int]):
+        """
+            This function generates all possible combinations of P and Q that can be used to solve the HPL problem
+            given a number of cpus
+        """
+        process_grids: ([int], [int]) = ([], [])
+        for P in range(1, int(cpu_count/2) + 1):
+            for Q in range(1, cpu_count + 1):
+                if P * Q == cpu_count:
+                    process_grids[0].append(P)
+                    process_grids[1].append(Q)
+        return process_grids
+
+    @staticmethod
+    def calculate_max_problem_size(available_memory: int) -> int:
+        num_doubles = available_memory / 8
+        return int(math.sqrt(num_doubles))
+
+    @staticmethod
+    def generate_possible_problem_sizes(min_n: int = MIN_N, max_n:int = MAX_N, step_n:int = STEP_N) -> [int]:
+        """
+            This function generates a list of problem sizes to solve for
+        """
+        return list(range(min_n, max_n + 1, step_n))
+
+    @staticmethod
     def generate_input_file(n: [int], nb: [int], p: [int], q: [int], write_file: bool, output_file: str, row_major: bool) -> str:
 
         if len(p) != len(q):

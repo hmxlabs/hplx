@@ -5,6 +5,14 @@ from hmxlabs.hplx.hpl_input import HplInputFileGenerator
 
 class TestHplInputFileGenerator(unittest.TestCase):
 
+    def test_generate_process_grid(self) -> None:
+        grid = HplInputFileGenerator.generate_possible_process_grids(4)
+        self.assertEqual(2, len(grid), "The number of possible grids was not as expected")
+        self.assertEqual(1, grid[0][0], "The value of P was not as expected")
+        self.assertEqual(2, grid[0][1], "The value of P was not as expected")
+        self.assertEqual(4, grid[1][0], "The value of Q was not as expected")
+        self.assertEqual(2, grid[1][1], "The value of Q was not as expected")
+
     def test_generate_input_file(self) -> None:
         output = HplInputFileGenerator.generate_input_file([1000], [32], [2],[2], False,
                                                   "HPL.TEST.dat", True)
