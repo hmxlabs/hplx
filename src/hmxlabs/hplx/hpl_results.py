@@ -108,6 +108,15 @@ class HplResult:
     def to_json(self):
         return json.dumps(self.to_dict())
 
+    @staticmethod
+    def highest_gflops(results: list["HplResult"]) -> "HplResult":
+        highest = None
+        for result in results:
+            if highest is None or result.gflops > highest.gflops:
+                highest = result
+
+        return highest
+
 
 class HplResultsFile:
     @staticmethod

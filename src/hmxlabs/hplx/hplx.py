@@ -26,14 +26,20 @@ def setup_argparse():
     parser_input.add_argument("--output", dest="output", required=False, action="store_true", default=False,
                                   help="The name of HPL input file to generate")
 
-    parser_find_optimal = subparsers.add_parser("calc_optimal", help="Find optimal HPLinpack parameters via exectution")
+    parser_find_optimal = subparsers.add_parser("calc-optimal", help="Find optimal HPLinpack parameters via exectution")
     parser_find_optimal.set_defaults(func=calc_optimal)
 
     try:
         args = argparser.parse_args()
-        args.func(args)
     except Exception:
         argparser.print_help()
+        sys.exit(1)
+
+    try:
+        args.func(args)
+    except Exception as e:
+        print("An error occurred. Exiting")
+        print(f"Error: {e}")
         sys.exit(1)
 
 def process_output(args):
@@ -80,17 +86,16 @@ def calc_optimal(args):
 
     print("Running HPL to determine process grid")
     hpl_cmd = get_hpl_exec_command(cpu_count)
+    print(f"Running HPL with command: {hpl_cmd}")
     subprocess.Popen(hpl_cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE).wait()
 
     if not (Path(proc_grid_file).exists()):
-        print(f"Error creating HPL process grid file {proc_grid_file}", file=sys.stderr)
+        print(f"HPL output file for process grid calc not found {proc_grid_file}", file=sys.stderr)
         sys.exit(1)
 
     proc_grid_results = HplResultsFile.read_result_file(proc_grid_file)
-    
-
-
-
+    best_grid = HplResult.highest_gflops(proc_grid_results)
+    print(f"Best process grid: {best_grid.to_json()}")
 
 
 

@@ -116,7 +116,7 @@ class HplInputFileGenerator:
 
 
     @staticmethod
-    def generate_input_file_calc_best_process_grid(cpu_count: int, write_file: bool, output_file: str, row_major: bool) -> str:
+    def generate_input_file_calc_best_process_grid(cpu_count: int, write_file: bool, output_file: str, row_major: bool = True) -> str:
         process_grid = HplInputFileGenerator.generate_possible_process_grids(cpu_count)
         # Use a very small problem size to calculate the best process grid to minimise compute time
         # as the variation due to block size and problem size is minimal in determining the best grid
@@ -159,7 +159,7 @@ class HplInputFileGenerator:
         return HplInputFileGenerator.generate_input_file(problem_sizes, block_sizes, p, q, write_file, output_file, row_major)
 
     @staticmethod
-    def generate_input_file(n: [int], nb: [int], p: [int], q: [int], write_file: bool, output_file: str, row_major: bool) -> str:
+    def generate_input_file(n: [int], nb: [int], p: [int], q: [int], write_file: bool, output_file: str, row_major: bool = True) -> str:
 
         if len(p) != len(q):
             raise ValueError("The number of elements in p and q must be the same")
