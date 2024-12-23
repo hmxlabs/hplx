@@ -15,7 +15,7 @@ class TestHplInputFileGenerator(unittest.TestCase):
 
     def test_generate_input_file(self) -> None:
         output = HplInputFileGenerator.generate_input_file([1000], [32], [2],[2], False,
-                                                  "HPL.TEST.dat", True)
+                                                  "HPL.TEST.out", True)
 
         with open("./data/HPL.dat", "r") as file:
             expected_output = file.read()

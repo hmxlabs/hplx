@@ -23,8 +23,8 @@ class HplInputFileGenerator:
     LINE_8_COMMENT = " \t\tBlock sizes to solve for"
     LINE_9_COMMENT = " \t\t\tPMAP process mapping (0=Row-,1=Column-major)"
     LINE_10_COMMENT = " \t\t\tNumber of process grids to solve for"
-    LINE_11_COMMENT = " \t\tProcess grid definition. P"
-    LINE_12_COMMENT = " \t\tProcess grid definition. Q"
+    LINE_11_COMMENT = " \t\t\tProcess grid definition. P"
+    LINE_12_COMMENT = " \t\t\tProcess grid definition. Q"
     LINES_13_36 = """16.0         threshold
 1            # of panel fact
 2            PFACTs (0=left, 1=Crout, 2=Right)
@@ -200,7 +200,7 @@ class HplInputFileGenerator:
         # Line 6 is the problem sizes to solve, space separated
         prob_sizes: str = ""
         for size in n:
-            prob_sizes += 'size '
+            prob_sizes += f"{size} "
         output += prob_sizes + HplInputFileGenerator.LINE_6_COMMENT + "\n"
 
         # Line 7 is the number of block sizes to solve for. This is the length of the nb array
@@ -208,7 +208,7 @@ class HplInputFileGenerator:
         # Line 8 is the block sizes to solve, space separated
         block_sizes: str = ""
         for block in nb:
-            block_sizes += 'block '
+            block_sizes += f"{block} "
         output += block_sizes + HplInputFileGenerator.LINE_8_COMMENT + "\n"
 
         # Line 9 is the PMAP process mapping.
@@ -224,13 +224,13 @@ class HplInputFileGenerator:
         # Line 11 is the process grid definition for P
         p_str: str = ""
         for p_val in p:
-            p_str += 'p_val '
+            p_str += f"{p_val} "
         output += p_str + HplInputFileGenerator.LINE_11_COMMENT +"\n"
 
         # Line 12 is the process grid definition for Q
         q_str: str = ""
         for q_val in q:
-            q_str += 'q_val '
+            q_str += f"{q_val} "
         output += q_str + HplInputFileGenerator.LINE_12_COMMENT + "\n"
 
         # The rest of the file is a default value. This can be overridden by the user
