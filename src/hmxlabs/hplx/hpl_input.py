@@ -156,7 +156,7 @@ class HplInputFileGenerator:
         max_problem_size = problem_sizes[-1]
         block_sizes = HplInputFileGenerator.generate_possible_block_sizes(max_problem_size)
 
-        return HplInputFileGenerator.generate_input_file(problem_sizes, block_sizes, p, q, write_file, output_file, row_major)
+        return HplInputFileGenerator.generate_input_file(problem_sizes, block_sizes, [p], [q], write_file, output_file, row_major)
 
     @staticmethod
     def generate_input_file(n: [int], nb: [int], p: [int], q: [int], write_file: bool, output_file: str, row_major: bool = True) -> str:

@@ -89,7 +89,7 @@ def calc_optimal(args):
     # 3. From the output select the best performing problem size
 
     cpu_count = psutil.cpu_count(logical=False)
-    available_memory = psutil.virtual_memory()
+    available_memory = psutil.virtual_memory().total
     hpl_cmd = get_hpl_exec_command(cpu_count)
     logging.info(f"HPL command: {hpl_cmd}")
 
