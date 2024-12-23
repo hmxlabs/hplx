@@ -53,9 +53,9 @@ def setup_argparse() -> argparse.Namespace:
                                   help="The name of HPL input file to generate")
 
     parser_find_optimal = subparsers.add_parser("calc-optimal", help="Find optimal HPLinpack parameters via exectution")
-    parser_find_optimal.add_argument("--num-prob-sizes", dest="n_prob_sizes", required=False, action="store_true", default=10,
+    parser_find_optimal.add_argument("--num-prob-sizes", dest="n_prob_sizes", type=int, required=False, default=10,
                                     help="The number of problem sizes to use in the test. Default is 10", )
-    parser_find_optimal.add_argument("--num-block-sizes", dest="n_block_sizes", required=False, action="store_true", default=10,
+    parser_find_optimal.add_argument("--num-block-sizes", dest="n_block_sizes", type=int, required=False, default=10,
                                      help="The number of block sizes to use in the test. Default is 10", )
     parser_find_optimal.set_defaults(func=calc_optimal)
 
@@ -87,7 +87,7 @@ def get_hpl_exec_command(cpu_count: int) -> str:
     return hpl_cmd.replace("$CPUS$", str(cpu_count))
 
 def calc_optimal(args):
-    logging.info("Calculating maximal gflops experimentally")
+    logging.info(f"Calculating maximal gflops experimentally with {args.n_prob_sizes} problem sizes and {args.n_block_sizes} block sizes")
     # Approach here is to
     # 1. Run with multuple process grids and a fixed small problem size
     # 2. From the output select the best performing grid and then run with multiple problem sizes
