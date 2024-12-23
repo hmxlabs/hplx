@@ -152,8 +152,9 @@ class HplInputFileGenerator:
 
     @staticmethod
     def generate_input_file_calc_best_problem_size(available_memory: int, p: [int], q: [int], write_file: bool,
-                                                   output_file: str, row_major: bool = True,
-                                                   num_prob_sizes: int = 10, num_block_sizes: int = 10) -> str:
+                                                   output_file: str,
+                                                   num_prob_sizes: int = 10, num_block_sizes: int = 10,
+                                                   row_major: bool = True,) -> str:
         problem_sizes = HplInputFileGenerator.generate_possible_problem_sizes(available_memory, num_prob_sizes)
         max_problem_size = problem_sizes[-1]
         block_sizes = HplInputFileGenerator.generate_possible_block_sizes(max_problem_size, num_block_sizes)
