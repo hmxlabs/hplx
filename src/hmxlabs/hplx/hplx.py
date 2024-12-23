@@ -12,9 +12,9 @@ from hmxlabs.hplx.hpl_input import HplInputFileGenerator
 from hmxlabs.hplx.hpl_results import HplResult, HplResultsFile
 
 LOG_FILE = "hplx.log"
-MAX_RESULTS_FILE = "highest_gflops"
-ALL_RESULTS_FILE = "results"
-THEORETICAL_MAX_RESULTS_FILE = "theoretical_max"
+MAX_RESULTS_FILE = "calc-highest-gflops"
+ALL_RESULTS_FILE = "calc-highest-gflops-all"
+THEORETICAL_MAX_RESULTS_FILE = "theoretical-max"
 
 
 def main():
