@@ -49,12 +49,19 @@ class TestHplInputFileGenerator(unittest.TestCase):
         self.assertEqual(cpu_count, params[2]*params[3], "The value of P*Q was not as the cpu count")
 
     def test_generate_possible_problem_sizes(self) -> None:
-        sizes = HplInputFileGenerator.generate_possible_problem_sizes(16*1024*1024*1024)
-        self.assertLess(10, len(sizes), "The number of possible problem sizes was not as expected")
-        self.assertGreater(10000, sizes[0], "The value of N was not as expected")
+        available_mem = 16 * (1024**3)
+        prob_size = 10
+        sizes = HplInputFileGenerator.generate_possible_problem_sizes(16*1024*1024*1024, prob_size)
+        max_size = HplInputFileGenerator.calculate_max_problem_size(available_mem)
+        self.assertEqual(prob_size, len(sizes), "The number of possible problem sizes was not as expected")
+        self.assertLess(1000, sizes[0], "The value of N was not as expected")
+        self.assertGreater(max_size, sizes[-1], "The largest problem size is greater than the maximum size")
 
     def test_generate_block_sizes(self) -> None:
-        prob_sizes  = HplInputFileGenerator.generate_possible_problem_sizes(16*1024*1024*1024)
-        block_sizes = HplInputFileGenerator.generate_possible_block_sizes(prob_sizes[-1])
-        self.assertEqual(6, len(block_sizes), "The number of possible block sizes was not as expected")
-        self.assertGreater(256, block_sizes[-1], "The value of NB was not as expected")
+        available_mem = 16 * (1024 ** 3)
+        prob_sizes  = HplInputFileGenerator.generate_possible_problem_sizes(available_mem)
+        num_block_sizes = 5
+        block_sizes = HplInputFileGenerator.generate_possible_block_sizes(prob_sizes[-1], num_block_sizes)
+        self.assertEqual(num_block_sizes, len(block_sizes), "The number of possible block sizes was not as expected")
+        self.assertLess(32, block_sizes[0], "The lowest block size was less than 32")
+        self.assertGreater(256, block_sizes[-1], "The highest block size was greater than 256")

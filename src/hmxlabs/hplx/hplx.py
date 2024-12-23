@@ -2,6 +2,7 @@ import argparse
 import logging
 import os
 import sys
+from email.policy import default
 from os.path import curdir
 
 import psutil
@@ -52,6 +53,10 @@ def setup_argparse() -> argparse.Namespace:
                                   help="The name of HPL input file to generate")
 
     parser_find_optimal = subparsers.add_parser("calc-optimal", help="Find optimal HPLinpack parameters via exectution")
+    parser_find_optimal.add_argument("--num-prob-sizes", dest="n_prob_sizes", required=False, action="store_true", default=10,
+                                    help="The number of problem sizes to use in the test. Default is 10", )
+    parser_find_optimal.add_argument("--num-block-sizes", dest="n_block_sizes", required=False, action="store_true", default=10,
+                                     help="The number of block sizes to use in the test. Default is 10", )
     parser_find_optimal.set_defaults(func=calc_optimal)
 
     try:
@@ -110,7 +115,10 @@ def calc_optimal(args):
     if Path(prob_sizes_file).exists():
         Path(prob_sizes_file).unlink()
 
-    hpl_dat = HplInputFileGenerator.generate_input_file_calc_best_problem_size(available_memory, best_grid.p, best_grid.q, True, prob_sizes_file)
+    hpl_dat = HplInputFileGenerator.generate_input_file_calc_best_problem_size(available_memory, best_grid.p,
+                                                                                best_grid.q, True,
+                                                                                prob_sizes_file, args.n_prob_sizes,
+                                                                                args.n_block_sizes)
     write_hpl_input_file(hpl_dat, input_file)
     prob_size_results = run_hpl(hpl_cmd, prob_sizes_file)
     best_prob_size = HplResult.highest_gflops(prob_size_results)
@@ -172,7 +180,7 @@ def write_results(file_path: str, results: list[HplResult], jsonlines: bool) -> 
     else:
         file_path = file_path + ".csv"
         HplResultsFile.write_results_to_csv(file_path, results)
-        
+
 
 if __name__ == "__main__":
     main()

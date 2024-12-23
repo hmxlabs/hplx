@@ -124,18 +124,18 @@ class HplInputFileGenerator:
 
 
     @staticmethod
-    def generate_possible_problem_sizes(available_memory: int) -> [int]:
+    def generate_possible_problem_sizes(available_memory: int, num_sizes: int = 10) -> [int]:
         max_problem_size = HplInputFileGenerator.calculate_max_problem_size(available_memory)
         # Bit of a random guess here but use 1/8th of the max problem size as the minimum to try and guess a range
         min_problem_size = int(max_problem_size / 8)
-        step_size = int((max_problem_size - min_problem_size) / 10)
         if 1000 > min_problem_size:
             min_problem_size = 1000
-        return list(range(min_problem_size, max_problem_size + 1, step_size))
+        step_size = int((max_problem_size - min_problem_size) / (num_sizes-1))
+        return list(range(min_problem_size, max_problem_size, step_size))
 
 
     @staticmethod
-    def generate_possible_block_sizes(n: int) -> [int]:
+    def generate_possible_block_sizes(n: int, num_block_sizes: int = 10) -> [int]:
         # The most likely theoretical best block size is sqrt(n)
         theoretical_best_block_size = int(math.sqrt(n))
         min_nb = int(theoretical_best_block_size/4)
@@ -147,14 +147,16 @@ class HplInputFileGenerator:
         if 256 < max_nb:
             max_nb = 256
 
-        step = int((max_nb-min_nb) / 5)
-        return list(range(min_nb, max_nb + 1, step))
+        step = int((max_nb-min_nb) / (num_block_sizes - 1))
+        return list(range(min_nb, max_nb, step))
 
     @staticmethod
-    def generate_input_file_calc_best_problem_size(available_memory: int, p: [int], q: [int], write_file: bool, output_file: str, row_major: bool = True) -> str:
-        problem_sizes = HplInputFileGenerator.generate_possible_problem_sizes(available_memory)
+    def generate_input_file_calc_best_problem_size(available_memory: int, p: [int], q: [int], write_file: bool,
+                                                   output_file: str, row_major: bool = True,
+                                                   num_prob_sizes: int = 10, num_block_sizes: int = 10) -> str:
+        problem_sizes = HplInputFileGenerator.generate_possible_problem_sizes(available_memory, num_prob_sizes)
         max_problem_size = problem_sizes[-1]
-        block_sizes = HplInputFileGenerator.generate_possible_block_sizes(max_problem_size)
+        block_sizes = HplInputFileGenerator.generate_possible_block_sizes(max_problem_size, num_block_sizes)
 
         return HplInputFileGenerator.generate_input_file(problem_sizes, block_sizes, [p], [q], write_file, output_file, row_major)
 
