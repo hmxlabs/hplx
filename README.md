@@ -144,7 +144,7 @@ or 'theoretical-max.csv' depending on the output format.
 The command to execute the HPL benchmark must be specified in the environment variable `HPL_EXEC`.
 For example
 
-```export HPL_EXEC="mpirun -n $CPU$ --map-by l3-cache --mca btl self,vader xhpl"```
+```export HPL_EXEC="mpirun -n $CPUS$ --map-by l3-cache --mca btl self,vader xhpl"```
 
 The value of `$CPU` will be replaced by the number of physical cores on the machine or the
 value specified by the `--cpu-count` option. Please note that if a full path to the executable
@@ -178,7 +178,7 @@ and then use only this process grid to determine the best problem size (N) and b
 The command to execute the HPL benchmark must be specified in the environment variable `HPL_EXEC`.
 For example
 
-```export HPL_EXEC="mpirun -n $CPU$ --map-by l3-cache --mca btl self,vader xhpl"```
+```export HPL_EXEC="mpirun -n $CPUS$ --map-by l3-cache --mca btl self,vader xhpl"```
 
 The value of `$CPU` will be replaced by the number of physical cores on the machine or the
 value specified by the `--cpu-count` option. Please note that if a full path to the executable
