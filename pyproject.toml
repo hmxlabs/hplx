@@ -4,11 +4,11 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "hmxlabs.hplx"
-version = "1.0.0"
+version = "0.0.1"
 authors = [
   { name="HMx Labs", email="comms@hmxlabs.uk" }
 ]
-description = "Package to get basic system information including CPU count, HT/SMT status, RAM and disk. Not doing anything special. Just uses psutil and py-cpuinfo"
+description = "This project is a collection of tools to help use the HPL benchmark. See https://github.com/hmxlabs/hplx/blob/main/README.md for more information."
 readme = "README.md"
 requires-python = ">=3.10"
 classifiers = [
