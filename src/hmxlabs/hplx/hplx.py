@@ -2,9 +2,6 @@ import argparse
 import logging
 import os
 import sys
-from email.policy import default
-from os.path import curdir
-
 import psutil
 import subprocess
 from pathlib import Path
@@ -35,24 +32,29 @@ def main():
         sys.exit(1)
 
 def setup_argparse() -> argparse.Namespace:
-    argparser = argparse.ArgumentParser(description="HPLinpack benchmark input and output file tool",
+    argparser = argparse.ArgumentParser(description="HPLinpack benchmark extension tool",
                                         epilog="(C) HMx Labs Limited 2024. All Rights Reserved.")
 
+    # Global options
     argparser.add_argument("--output-jsonlines", dest="output_jsonlines", required=False,
                                             action=argparse.BooleanOptionalAction, default=False,
                                             help="Output results in JSON lines format")
 
+    # Parse HPL output file
     subparsers = argparser.add_subparsers()
-    parser_output = subparsers.add_parser("parse-output", help="Process HPLinpack output files")
+    parser_output = subparsers.add_parser("parse-results", help="Parse HPLinpack output files")
     parser_output.set_defaults(func=parse_output)
-    parser_output.add_argument("--input", dest="input", required=False, action="store_true", default=False,
-                                  help="The HPL output file to process")
+    parser_output.add_argument("--input-file", dest="input_file", required=True, type=str,
+                                  help="The HPL results file to process")
+    parser_output.add_argument("--output-file", dest="output_file", required=False, type=str, default=None,
+                                  help="The output file to write the processed results to. If not specified no output file is written")
 
+    # Generate input file
     parser_input = subparsers.add_parser("gen-input", help="Generate HPLinpack input files")
     parser_input.set_defaults(func=generate_input)
-    parser_input.add_argument("--output", dest="output", required=False, action="store_true", default=False,
-                                  help="The name of HPL input file to generate")
 
+
+    # Calculate optimal
     parser_find_optimal = subparsers.add_parser("calc-optimal", help="Find optimal HPLinpack parameters via exectution")
     parser_find_optimal.add_argument("--num-prob-sizes", dest="n_prob_sizes", type=int, required=False, default=10,
                                     help="The number of problem sizes (N) to use in the test. Default is 10", )
@@ -60,6 +62,7 @@ def setup_argparse() -> argparse.Namespace:
                                      help="The number of block sizes (NB) to use in the test. Default is 10", )
     parser_find_optimal.set_defaults(func=calc_optimal)
 
+    # Theoretical optimal
     parser_theoretical_optimal = subparsers.add_parser("run-theoretical-optimal",
                                                        help="Use theoretical best input parameters to run HPL")
     parser_theoretical_optimal.add_argument("--min-prob-sizes", dest="min_prob_sizes", type=int, required=False, default=1000,
@@ -83,8 +86,41 @@ def setup_argparse() -> argparse.Namespace:
     return args
 
 
-def parse_output(args):
-    print("Processing output")
+def parse_output(args) -> None:
+
+    input_file = args.input_file
+    write_output = False
+    output_file = None
+    if args.output_file is not None:
+        write_output = True
+        output_file = args.output_file
+
+    logging.info(f"Parsing HPL results. Input file: {input_file}")
+    input_file_path = Path(input_file)
+    if not input_file_path.exists():
+        logging.error(f"Input file {input_file} does not exist")
+        sys.exit(1)
+
+    if not input_file_path.is_file():
+        logging.error(f"Input file {input_file} is not a file")
+        sys.exit(1)
+
+    if input_file_path.stat().st_size == 0:
+        logging.error(f"Input file {input_file} is empty")
+        sys.exit(1)
+
+    results = HplResultsFile.read_result_file(input_file)
+    if len(results) == 0:
+        logging.error(f"No results found in the input file {input_file}")
+        sys.exit(1)
+
+    best_result = HplResult.highest_gflops(results)
+    logging.info(f"Parsed {len(results)} results. Highest GFLOPS: {best_result.gflops}")
+
+    if write_output:
+        logging.info(f"Writing output to file: {output_file}")
+        write_results(output_file, results, args.output_jsonlines)
+
 
 def generate_input(args):
     print("Generating input")
@@ -190,15 +226,16 @@ def run_hpl(hpl_cmd: str, expected_output_file:str) -> list[HplResult]:
     logging.info(f"Running HPL with command: {hpl_cmd}")
     subprocess.Popen(hpl_cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE).wait()
 
-    if not (Path(expected_output_file).exists()):
+    expected_output_path = Path(expected_output_file)
+    if not expected_output_path.exists():
         logging.error(f"The expected output file running HPL: {expected_output_file} was not found. Did the command run?")
         sys.exit(1)
 
-    if not Path(expected_output_file).is_file():
+    if not expected_output_path.is_file():
         logging.error(f"The expected output file running HPL: {expected_output_file} is not a file")
         sys.exit(1)
 
-    if Path(expected_output_file).stat().st_size == 0:
+    if expected_output_path.stat().st_size == 0:
         logging.error(f"The expected output file running HPL: {expected_output_file} is empty")
         sys.exit(1)
 
