@@ -38,11 +38,13 @@ def setup_argparse() -> argparse.Namespace:
                                             action=argparse.BooleanOptionalAction, default=False,
                                             help="Output results in JSON lines format")
     argparser.add_argument("--cpu-count", dest="cpu_count", required=False, type=int,
-                              default=psutil.cpu_count(logical=False),
+                              default=0,
                               help="The number of physical cores to use in the test. Default is the number of physical cores on the machine")
     argparser.add_argument("--available-memory", dest="available_memory", required=False, type=int,
                               default=psutil.virtual_memory().total,
                               help="The total available memory in bytes. Default is the total available memory on the machine")
+    argparser.add_argument("--use-smt", dest="use_smt", required=False, type=bool, action=argparse.BooleanOptionalAction,
+                           default=False, help="Use SMT (Hyperthreading) if available when counting CPUs. Default is False")
 
     # Parse HPL output file
     subparsers = argparser.add_subparsers()
@@ -170,7 +172,7 @@ def parse_output(args) -> None:
 
 def generate_input_tbest(args):
     logging.info("Generating HPL input file assuming theoretical best parameters")
-    cpu_count = args.cpu_count
+    cpu_count = get_cpu_count(args)
     available_memory = args.available_memory
     output_file = args.output_file
     output_file_path = Path(output_file)
@@ -200,7 +202,7 @@ def generate_input_tbest(args):
 
 def generate_input_calc_optimal(args) -> None:
     logging.info("Generating HPL input file to determine optimal gflops experimentally")
-    cpu_count = args.cpu_count
+    cpu_count = get_cpu_count(args)
     available_memory = args.available_memory
     output_file = args.output_file
     output_file_path = Path(output_file)
@@ -316,7 +318,7 @@ def write_results(file_path: str, results: list[HplResult], jsonlines: bool) -> 
 def _run_theoretical_optimal(args) -> list[HplResult]:
     logging.info("Running HPL with theoretical best parameters")
 
-    cpu_count = args.cpu_count
+    cpu_count = get_cpu_count(args)
     available_memory = args.available_memory
 
     input_file = "./HPL.dat"
@@ -347,7 +349,7 @@ def _run_calc_optimal(args) -> list[HplResult]:
     # 2. From the output select the best performing grid and then run with multiple problem sizes
     # 3. From the output select the best performing problem size
 
-    cpu_count = args.cpu_count
+    cpu_count = get_cpu_count(args)
     available_memory = args.available_memory
 
     proc_grid_file = "./HPL_PROC_GRID.out"
@@ -375,6 +377,21 @@ def _run_calc_optimal(args) -> list[HplResult]:
     prob_size_results = run_hpl(cpu_count, prob_sizes_file, "prob_size")
     all_results = proc_grid_results + prob_size_results
     return all_results
+
+
+def get_cpu_count(args) -> int:
+    if args.cpu_count > 0:
+        logging.info(f"Using user specified CPU count: {args.cpu_count}")
+        return args.cpu_count
+
+    smt_off_cpus = psutil.cpu_count(logical=False)
+    smt_on_cpus = psutil.cpu_count(logical=True)
+    cpu_count = smt_off_cpus
+    if args.use_smt:
+        cpu_count = smt_on_cpus
+
+    logging.info(f"Using {cpu_count} CPUs. User SMT: {args.use_smt}. Physical CPU Cores: {smt_off_cpus}. Logical CPU Cores: {smt_on_cpus}")
+    return cpu_count
 
 if __name__ == "__main__":
     main()
