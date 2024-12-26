@@ -84,6 +84,8 @@ Specifying `--cpu-count` will override any automatic detection of the number of 
 Specifying `--available-memory` will override any automatic detection of the available memory and use the specified value
 
 Specifying `--use-smt` will count the number of CPUs including SMT (Hyperthreading) if available
+Note that if using SMT then the `--use-hwthread-cpus` must be passed to `mpirun` also.
+
 
 Specifying `--output-jsonlines` will output the results in JSON lines format. If not specified the results will be output in CSV format.
 
