@@ -276,7 +276,7 @@ def run_hpl(cpu_count: int, expected_output_file:str, run_type: str = None) -> l
     hpl_cmd = get_hpl_exec_command(cpu_count)
 
     logging.info(f"Running HPL with command: {hpl_cmd}")
-    subprocess.Popen(hpl_cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE).wait()
+    subprocess.Popen(hpl_cmd, shell=True).wait()
 
     expected_output_path = Path(expected_output_file)
     if not expected_output_path.exists():
