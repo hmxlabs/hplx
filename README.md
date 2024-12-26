@@ -63,6 +63,30 @@ options:
 
 ```
 
+### Global Options
+There are a small number of options that apply globally across all subcommands. These must be specified
+before the subcommand.
+
+```
+  -h, --help            show this help message and exit
+  --output-jsonlines, --no-output-jsonlines
+                        Output results in JSON lines format (default: False)
+  --cpu-count CPU_COUNT
+                        The number of physical cores to use in the test. Default is the number of physical cores on the machine
+  --available-memory AVAILABLE_MEMORY
+                        The total available memory in bytes. Default is the total available memory on the machine
+  --use-smt, --no-use-smt
+                        Use SMT (Hyperthreading) if available when counting CPUs. Default is False (default: False)
+```
+
+Specifying `--cpu-count` will override any automatic detection of the number of CPUs and use the specified values
+
+Specifying `--available-memory` will override any automatic detection of the available memory and use the specified value
+
+Specifying `--use-smt` will count the number of CPUs including SMT (Hyperthreading) if available
+
+Specifying `--output-jsonlines` will output the results in JSON lines format. If not specified the results will be output in CSV format.
+
 ### Reading Results from HPL Output
 The `hplx` tool can read the results from the HPL output file and output them in CSV or JSON lines format.
 
