@@ -10,6 +10,8 @@ class HplResult:
     JSON_KEY_Q = "q"
     JSON_KEY_TIME = "time"
     JSON_KEY_GFLOPS = "gflops"
+    JSON_KEY_CPUS = "cpu_count"
+    JSON_KEY_TYPE = "type"
 
 
     def __init__(self) -> None:
@@ -19,6 +21,8 @@ class HplResult:
         self._q = math.nan
         self._time = math.nan
         self._gflops = math.nan
+        self._cpu_count = math.nan
+        self._type = None
 
     @property
     def n(self):
@@ -68,25 +72,49 @@ class HplResult:
     def gflops(self, gflops):
         self._gflops = gflops
 
+    @property
+    def cpu_count(self):
+        return self._cpu_count
+
+    @cpu_count.setter
+    def cpu_count(self, cpu_count):
+        self._cpu_count = cpu_count
+
+    @property
+    def type(self):
+        return self._type
+
+    @type.setter
+    def type(self, type):
+        self._type = type
+
     def __str__(self) -> str:
-        return f"n={self.n}, nb={self.nb}, p={self.p}, q={self.q}, time={self.time}, gflops={self.gflops}"
+        return f"n={self.n}, nb={self.nb}, p={self.p}, q={self.q}, time={self.time}, gflops={self.gflops}, cpu_count={self.cpu_count}, type={self.type}"
 
     def to_dict(self):
-        return {
+        ret_dict = {
             HplResult.JSON_KEY_N: self.n,
             HplResult.JSON_KEY_NB: self.nb,
             HplResult.JSON_KEY_P: self.p,
             HplResult.JSON_KEY_Q: self.q,
             HplResult.JSON_KEY_TIME: self.time,
-            HplResult.JSON_KEY_GFLOPS: self.gflops
+            HplResult.JSON_KEY_GFLOPS: self.gflops,
         }
 
+        if not math.isnan(self.cpu_count):
+            ret_dict[HplResult.JSON_KEY_CPUS] = self.cpu_count
+
+        if self.type:
+            ret_dict[HplResult.JSON_KEY_TYPE] = self.type
+
+        return ret_dict
+
     def to_csv(self):
-        return f"{self.n},{self.nb},{self.p},{self.q},{self.time},{self.gflops}"
+        return f"{self.n},{self.nb},{self.p},{self.q},{self.time},{self.gflops}, {self.cpu_count}, {self.type}"
 
     @staticmethod
     def csv_header():
-        return f"{HplResult.JSON_KEY_N},{HplResult.JSON_KEY_NB},{HplResult.JSON_KEY_P},{HplResult.JSON_KEY_Q},{HplResult.JSON_KEY_TIME},{HplResult.JSON_KEY_GFLOPS}"
+        return f"{HplResult.JSON_KEY_N},{HplResult.JSON_KEY_NB},{HplResult.JSON_KEY_P},{HplResult.JSON_KEY_Q},{HplResult.JSON_KEY_TIME},{HplResult.JSON_KEY_GFLOPS}, {HplResult.JSON_KEY_CPUS}, {HplResult.JSON_KEY_TYPE}"
 
     def update(self, data: dict):
         self.n = data[HplResult.JSON_KEY_N]

@@ -7,7 +7,13 @@ report back.
 ## Installation
 The project is available on PyPi and may be installed as follows:
 
-```pip install hmxlabs.hplx```
+```
+pip install hmxlabs.hplx
+```
+or
+```
+python3 -m pip install hmxlabs.hplx
+```
 
 ## Usage
 The project provides a command line tool called `hplx`. The tool provides a number of 
@@ -60,7 +66,9 @@ options:
 ### Reading Results from HPL Output
 The `hplx` tool can read the results from the HPL output file and output them in CSV or JSON lines format.
 
-```python3 -m hmxlabs.hplx  parse-results --input-file HPL.out --output-file results [--output-jsonlines]```
+```
+python3 -m hmxlabs.hplx  parse-results --input-file HPL.out --output-file results [--output-jsonlines]
+```
 
 This will parse a file named `HPL.out` and output the results in a file named `results`. 
 If the `--output-jsonlines` flag is provided, the results will be output in JSON lines format else
@@ -85,7 +93,9 @@ options:
 ### Generating Theoretical Best HPL.dat File
 The `hplx` tool can generate a `HPL.dat` file with the theoretically best parameters for the HPL benchmark.
 
-```python3 -m hmxlabs.hplx gen-input-theoretical-best --output-file HPL.dat```
+```
+python3 -m hmxlabs.hplx gen-input-theoretical-best --output-file HPL.dat
+```
 
 This will generate a `HPL.dat` file with the theoretically best parameters for the HPL benchmark in
 the working directory. Any existing `HPL.dat` file will be overwritten.
@@ -112,7 +122,9 @@ options:
 WARNING: This will potentially generate a very large number of permutations for HPL to run some of
 of which may be with large problem sizes (N) and will take a long time to run. 
 
-```python3 -m hmxlabs.hplx gen-input-calc-optimal ```
+```
+python3 -m hmxlabs.hplx gen-input-calc-optimal
+```
 
 This will generate a `HPL.dat` file with the theoretically best parameters for the HPL benchmark in
 the working directory. Any existing `HPL.dat` file will be overwritten.
@@ -139,16 +151,22 @@ but will then also invoke the HPL benchmark using that file. Upon completion it 
 the results, print the gflops to stdout and write the results to a the file 'theoretical-max.jsonl'
 or 'theoretical-max.csv' depending on the output format.
 
-```python3 -m hmxlabs.hplx run-theoretical-optimal```
+```
+python3 -m hmxlabs.hplx run-theoretical-optimal
+```
 
 The command to execute the HPL benchmark must be specified in the environment variable `HPL_EXEC`.
 For example
 
-```export HPL_EXEC="mpirun -n $CPUS$ --map-by l3-cache --mca btl self,vader xhpl"```
+```
+export HPL_EXEC='mpirun -n $CPUS$ --map-by l3-cache --mca btl self,vader xhpl'
+```
 
 The value of `$CPU` will be replaced by the number of physical cores on the machine or the
 value specified by the `--cpu-count` option. Please note that if a full path to the executable
 is not specified then the executable must be in the path or in the working directory.
+
+The results will be written to two files, `hplx-highest-gflops` which contains a single record.
 
 As with the generation command above it is possible to tweak the input parameters to the 
 algorithm to generate the `HPL.dat` file.
@@ -178,14 +196,16 @@ and then use only this process grid to determine the best problem size (N) and b
 The command to execute the HPL benchmark must be specified in the environment variable `HPL_EXEC`.
 For example
 
-```export HPL_EXEC="mpirun -n $CPUS$ --map-by l3-cache --mca btl self,vader xhpl"```
+```
+export HPL_EXEC='mpirun -n $CPUS$ --map-by l3-cache --mca btl self,vader xhpl'
+```
 
 The value of `$CPU` will be replaced by the number of physical cores on the machine or the
 value specified by the `--cpu-count` option. Please note that if a full path to the executable
 is not specified then the executable must be in the path or in the working directory.
 
-The results will be written to two files, `calc-highest-gflops` which contains a single record
-with the highest gflops and `calc-highest-gflops-all` which contains all the permutations.
+The results will be written to two files, `hplx-highest-gflops` which contains a single record
+with the highest gflops and `hplx-all` which contains all the permutations.
 The files will be either in JSON lines or CSV format depending on the output format selected and
 will have the corresponding file extension.
 
@@ -194,8 +214,6 @@ generation command above.
 
 ```
 python3 -m hmxlabs.hplx calc-optimal --help
-STARTING HPLx
-Output directory: /Users/hamza/Documents/HMXLabs/Software/hplx
 usage: python3 -m hmxlabs.hplx calc-optimal [-h] [--num-prob-sizes N_PROB_SIZES] [--num-block-sizes N_BLOCK_SIZES]
 
 options:
@@ -204,4 +222,39 @@ options:
                         The number of problem sizes (N) to use in the test. Default is 10
   --num-block-sizes N_BLOCK_SIZES
                         The number of block sizes (NB) to use in the test. Default is 10
+```
+
+### Running Experimental and Theoretical Together
+It is possible to run the experimental and theoretical runs together. This will first generate
+the theoretically best `HPL.dat` file and then run the HPL benchmark using that file. Upon completion
+it will run the experimental runs. It is equivalent to running the two commands consecutively but
+it will produce a single set of output.
+
+```python3 -m hmxlabs.hplx run-all```
+
+The command to execute the HPL benchmark must be specified in the environment variable `HPL_EXEC`.
+For example
+
+```
+export HPL_EXEC='mpirun -n $CPUS$ --map-by l3-cache --mca btl self,vader xhpl'
+```
+
+All other command line options are as per the two commands above.
+
+```
+python -m hmxlabs.hplx run-all --help
+usage: python -m hmxlabs.hplx run-all [-h] [--num-prob-sizes N_PROB_SIZES] [--num-block-sizes N_BLOCK_SIZES] [--min-prob-sizes MIN_PROB_SIZES] [--max-prob-sizes MAX_PROB_SIZES] [--prob-sizes-step PROB_SIZES_STEP]
+
+options:
+  -h, --help            show this help message and exit
+  --num-prob-sizes N_PROB_SIZES
+                        The number of problem sizes (N) to use experimentally. Default is 10
+  --num-block-sizes N_BLOCK_SIZES
+                        The number of block sizes (NB) to use experimentally. Default is 10
+  --min-prob-sizes MIN_PROB_SIZES
+                        The minimum problem size (N) to determine the theoretical max Default is 1000
+  --max-prob-sizes MAX_PROB_SIZES
+                        The maximum problem size (N) to determine the theoretical max. Default is 1000000
+  --prob-sizes-step PROB_SIZES_STEP
+                        The problem size (N) step size for to determine the theoretical max. Default is 5000
 ```

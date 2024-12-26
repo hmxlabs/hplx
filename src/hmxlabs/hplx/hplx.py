@@ -9,10 +9,8 @@ from hmxlabs.hplx.hpl_input import HplInputFileGenerator
 from hmxlabs.hplx.hpl_results import HplResult, HplResultsFile
 
 LOG_FILE = "hplx.log"
-MAX_RESULTS_FILE = "calc-highest-gflops"
-ALL_RESULTS_FILE = "calc-highest-gflops-all"
-THEORETICAL_MAX_RESULTS_FILE = "theoretical-max"
-
+MAX_RESULTS_FILE = "hplx-highest-gflops"
+ALL_RESULTS_FILE = "hplx-all"
 
 def main():
     curdir = os.getcwd()
@@ -100,8 +98,26 @@ def setup_argparse() -> argparse.Namespace:
     parser_theoretical_optimal.add_argument("--max-prob-sizes", dest="max_prob_sizes", type=int, required=False, default=1000000,
                                      help="The maximum problem size (N) to evaluate for use. Default is 1000000")
     parser_theoretical_optimal.add_argument("--prob-sizes-step", dest="prob_sizes_step", type=int, required=False, default=5000,
-                                     help="The maximum problem size (N) step size for theoretical evaluation. Default is 5000")
+                                     help="The problem size (N) step size for theoretical evaluation. Default is 5000")
     parser_theoretical_optimal.set_defaults(func=run_theoretical_optimal)
+
+    # Run ALL.
+
+    parser_run_all = subparsers.add_parser("run-all", help="Run all theoretical best and experimental optimal tests")
+    parser_run_all.add_argument("--num-prob-sizes", dest="n_prob_sizes", type=int, required=False, default=10,
+                                     help="The number of problem sizes (N) to use experimentally. Default is 10")
+    parser_run_all.add_argument("--num-block-sizes", dest="n_block_sizes", type=int, required=False, default=10,
+                                     help="The number of block sizes (NB) to use experimentally. Default is 10")
+    parser_run_all.add_argument("--min-prob-sizes", dest="min_prob_sizes", type=int, required=False,
+                                            default=1000,
+                                            help="The minimum problem size (N) to determine the theoretical max Default is 1000")
+    parser_run_all.add_argument("--max-prob-sizes", dest="max_prob_sizes", type=int, required=False,
+                                            default=1000000,
+                                            help="The maximum problem size (N) to determine the theoretical max. Default is 1000000")
+    parser_run_all.add_argument("--prob-sizes-step", dest="prob_sizes_step", type=int, required=False,
+                                            default=5000,
+                                            help="The problem size (N) step size for to determine the theoretical max. Default is 5000")
+    parser_run_all.set_defaults(func=run_all_calcs)
 
     try:
         args = argparser.parse_args()
@@ -217,78 +233,28 @@ def get_hpl_exec_command(cpu_count: int) -> str:
 
 
 def run_theoretical_optimal(args):
-    logging.info("Running HPL with theoretical best parameters")
-
-    cpu_count = args.cpu_count
-    available_memory = args.available_memory
-    hpl_cmd = get_hpl_exec_command(cpu_count)
-    logging.info(f"HPL command: {hpl_cmd}")
-
-    input_file = "./HPL.dat"
-    theoretical_max_file = "./HPL_THEORETICAL_MAX.out"
-    if Path(theoretical_max_file).exists():
-        Path(theoretical_max_file).unlink()
-
-    logging.info(f"Creating HPL input file to determine theoretical best parameters...")
-    hpl_dat_inputs = HplInputFileGenerator.generate_theoretical_best_inputs(cpu_count, available_memory, args.min_prob_sizes,
-                                                                     args.max_prob_sizes, args.prob_sizes_step)
-
-    hpl_dat = HplInputFileGenerator.generate_input_file([hpl_dat_inputs[0]], [hpl_dat_inputs[1]], [hpl_dat_inputs[2]],
-                                                        [hpl_dat_inputs[3]], True, theoretical_max_file)
-    write_hpl_input_file(hpl_dat, input_file)
-    logging.info(f"Running HPL with theoretical best parameters. N={hpl_dat_inputs[0]}, NB={hpl_dat_inputs[1]}, P={hpl_dat_inputs[2]}, Q={hpl_dat_inputs[3]}")
-    results = run_hpl(hpl_cmd, theoretical_max_file)
-    best_gflops = HplResult.highest_gflops(results)
-    logging.info(f"Theoretical best GFLOPS: {best_gflops.gflops}")
-    write_results(THEORETICAL_MAX_RESULTS_FILE, results, args.output_jsonlines)
-
+    results = _run_theoretical_optimal(args)
+    write_results(MAX_RESULTS_FILE, results, args.output_jsonlines)
 
 def calc_optimal(args):
-    logging.info(f"Calculating maximal gflops experimentally with {args.n_prob_sizes} problem sizes and {args.n_block_sizes} block sizes")
-    # Approach here is to
-    # 1. Run with multuple process grids and a fixed small problem size
-    # 2. From the output select the best performing grid and then run with multiple problem sizes
-    # 3. From the output select the best performing problem size
-
-    cpu_count = args.cpu_count
-    available_memory = args.available_memory
-    hpl_cmd = get_hpl_exec_command(cpu_count)
-    logging.info(f"HPL command: {hpl_cmd}")
-
-    proc_grid_file = "./HPL_PROC_GRID.out"
-    if Path(proc_grid_file).exists():
-        Path(proc_grid_file).unlink()
-
-    input_file = "./HPL.dat"
-    logging.info(f"Creating HPL input file to determine best process grid...")
-    hpl_dat = HplInputFileGenerator.generate_input_file_calc_best_process_grid(cpu_count, True, proc_grid_file)
-    write_hpl_input_file(hpl_dat, input_file)
-
-    proc_grid_results = run_hpl(hpl_cmd, proc_grid_file)
-    best_grid = HplResult.highest_gflops(proc_grid_results)
-    logging.info(f"Best process grid: {best_grid}")
-
-    prob_sizes_file = "./HPL_PROB_SIZES.out"
-    if Path(prob_sizes_file).exists():
-        Path(prob_sizes_file).unlink()
-
-    hpl_dat = HplInputFileGenerator.generate_input_file_calc_best_problem_size(available_memory, [best_grid.p],
-                                                                                [best_grid.q], True,
-                                                                                prob_sizes_file, args.n_prob_sizes,
-                                                                                args.n_block_sizes)
-    write_hpl_input_file(hpl_dat, input_file)
-    prob_size_results = run_hpl(hpl_cmd, prob_sizes_file)
-    best_prob_size = HplResult.highest_gflops(prob_size_results)
-    logging.info(f"Best problem size: {best_prob_size}")
-
-    logging.info(f"Highest GFLOPS: {best_prob_size.gflops}")
+    results = _run_calc_optimal(args)
+    highest_gflop_result = HplResult.highest_gflops(results)
+    logging.info(f"Best input config size: {highest_gflop_result}")
+    logging.info(f"Highest GFLOPS: {highest_gflop_result.gflops}")
     logging.info("Writing highest GFLOPS to file")
-    write_results(MAX_RESULTS_FILE, [best_prob_size], args.output_jsonlines)
+    write_results(MAX_RESULTS_FILE, [highest_gflop_result], args.output_jsonlines)
+    write_results(ALL_RESULTS_FILE, results, args.output_jsonlines)
 
-    logging.info("Writing all results to file")
-    all_results = proc_grid_results + prob_size_results
+def run_all_calcs(args) -> None:
+    theoretical_results = _run_theoretical_optimal(args)
+    calc_results = _run_calc_optimal(args)
+    all_results = theoretical_results + calc_results
+    highest_gflop_result = HplResult.highest_gflops(all_results)
+    logging.info(f"Best input config size: {highest_gflop_result}")
+    logging.info(f"Highest GFLOPS: {highest_gflop_result.gflops}")
+    logging.info("Writing highest GFLOPS to file")
+    write_results(MAX_RESULTS_FILE, [highest_gflop_result], args.output_jsonlines)
     write_results(ALL_RESULTS_FILE, all_results, args.output_jsonlines)
-
 
 def write_hpl_input_file(contents: str, filename: str) -> None:
     if Path(filename).exists():
@@ -305,7 +271,10 @@ def write_hpl_input_file(contents: str, filename: str) -> None:
         sys.exit(1)
 
 
-def run_hpl(hpl_cmd: str, expected_output_file:str) -> list[HplResult]:
+def run_hpl(cpu_count: int, expected_output_file:str, run_type: str = None) -> list[HplResult]:
+    logging.info(f"Will run HPL with {cpu_count} CPUs")
+    hpl_cmd = get_hpl_exec_command(cpu_count)
+
     logging.info(f"Running HPL with command: {hpl_cmd}")
     subprocess.Popen(hpl_cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE).wait()
 
@@ -327,6 +296,10 @@ def run_hpl(hpl_cmd: str, expected_output_file:str) -> list[HplResult]:
         logging.error(f"No results found in the expected output file running HPL: {expected_output_file}")
         sys.exit(1)
 
+    for result in results:
+        result.type = run_type
+        result.cpu_count = cpu_count
+
     return results
 
 
@@ -339,6 +312,69 @@ def write_results(file_path: str, results: list[HplResult], jsonlines: bool) -> 
         file_path = file_path + ".csv"
         HplResultsFile.write_results_to_csv(file_path, results)
 
+
+def _run_theoretical_optimal(args) -> list[HplResult]:
+    logging.info("Running HPL with theoretical best parameters")
+
+    cpu_count = args.cpu_count
+    available_memory = args.available_memory
+
+    input_file = "./HPL.dat"
+    theoretical_max_file = "./HPL_THEORETICAL_MAX.out"
+    if Path(theoretical_max_file).exists():
+        Path(theoretical_max_file).unlink()
+
+    logging.info(f"Creating HPL input file to determine theoretical best parameters...")
+    hpl_dat_inputs = HplInputFileGenerator.generate_theoretical_best_inputs(cpu_count, available_memory,
+                                                                            args.min_prob_sizes,
+                                                                            args.max_prob_sizes, args.prob_sizes_step)
+
+    hpl_dat = HplInputFileGenerator.generate_input_file([hpl_dat_inputs[0]], [hpl_dat_inputs[1]], [hpl_dat_inputs[2]],
+                                                        [hpl_dat_inputs[3]], True, theoretical_max_file)
+    write_hpl_input_file(hpl_dat, input_file)
+    logging.info(
+        f"Running HPL with theoretical best parameters. N={hpl_dat_inputs[0]}, NB={hpl_dat_inputs[1]}, P={hpl_dat_inputs[2]}, Q={hpl_dat_inputs[3]}")
+    results = run_hpl(cpu_count, theoretical_max_file, "theoretical_max")
+    best_gflops = HplResult.highest_gflops(results)
+    logging.info(f"Theoretical best GFLOPS: {best_gflops.gflops}")
+    return results
+
+def _run_calc_optimal(args) -> list[HplResult]:
+    logging.info(
+        f"Calculating maximal gflops experimentally with {args.n_prob_sizes} problem sizes and {args.n_block_sizes} block sizes")
+    # Approach here is to
+    # 1. Run with multuple process grids and a fixed small problem size
+    # 2. From the output select the best performing grid and then run with multiple problem sizes
+    # 3. From the output select the best performing problem size
+
+    cpu_count = args.cpu_count
+    available_memory = args.available_memory
+
+    proc_grid_file = "./HPL_PROC_GRID.out"
+    if Path(proc_grid_file).exists():
+        Path(proc_grid_file).unlink()
+
+    input_file = "./HPL.dat"
+    logging.info(f"Creating HPL input file to determine best process grid...")
+    hpl_dat = HplInputFileGenerator.generate_input_file_calc_best_process_grid(cpu_count, True, proc_grid_file)
+    write_hpl_input_file(hpl_dat, input_file)
+
+    proc_grid_results = run_hpl(cpu_count, proc_grid_file, "proc_grid")
+    best_grid = HplResult.highest_gflops(proc_grid_results)
+    logging.info(f"Best process grid: {best_grid}")
+
+    prob_sizes_file = "./HPL_PROB_SIZES.out"
+    if Path(prob_sizes_file).exists():
+        Path(prob_sizes_file).unlink()
+
+    hpl_dat = HplInputFileGenerator.generate_input_file_calc_best_problem_size(available_memory, [best_grid.p],
+                                                                               [best_grid.q], True,
+                                                                               prob_sizes_file, args.n_prob_sizes,
+                                                                               args.n_block_sizes)
+    write_hpl_input_file(hpl_dat, input_file)
+    prob_size_results = run_hpl(cpu_count, prob_sizes_file, "prob_size")
+    all_results = proc_grid_results + prob_size_results
+    return all_results
 
 if __name__ == "__main__":
     main()
