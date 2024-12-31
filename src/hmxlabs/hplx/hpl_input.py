@@ -55,20 +55,23 @@ class HplInputFileGenerator:
 
     @staticmethod
     def generate_theoretical_best_inputs(  cpu_count: int,
-                                           available_memory_gb: int,
+                                           available_memory: int,
                                            min_n: int = MIN_N,
-                                           max_n:int = MAX_N,
+                                           max_n:int = 0,
                                            step_n:int = STEP_N) -> (int, int, int, int):
         """
             This function calculates the optimal N, NB, P, and Q for HPL based on available memory and cores.
             Taken from: https://gist.github.com/CJCShadowsan/94efdf21539f3156414c1224b1c76605
         """
         # Assuming HPL will need 8 bytes per double precision element
+        available_memory_gb = available_memory / (1024**3)
         double_precision_size = 8  # bytes per double
         memory_per_core_gb = available_memory_gb / cpu_count
+        if 0 == max_n:
+            max_n = HplInputFileGenerator.calculate_max_problem_size(available_memory)
 
         best_params = None
-        best_performance = float('inf')
+        best_performance = 0
 
         for N in range(min_n, max_n + 1, step_n):
             # Calculate the optimal NB based on memory per core (rule of thumb)
@@ -85,7 +88,7 @@ class HplInputFileGenerator:
                             # Calculate a performance metric here (lower is better)
                             # For now, we assume a simplistic estimation based on memory and grid size
                             performance_metric = required_memory * (P + Q)
-                            if performance_metric < best_performance:
+                            if performance_metric > best_performance:
                                 best_performance = performance_metric
                                 best_params = (N, NB, P, Q)
 

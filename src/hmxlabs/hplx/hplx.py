@@ -97,8 +97,8 @@ def setup_argparse() -> argparse.Namespace:
                                                        help="Use theoretical best input parameters to run HPL")
     parser_theoretical_optimal.add_argument("--min-prob-sizes", dest="min_prob_sizes", type=int, required=False, default=1000,
                                      help="The minimum problem size (N) to evaluate for use. Default is 1000")
-    parser_theoretical_optimal.add_argument("--max-prob-sizes", dest="max_prob_sizes", type=int, required=False, default=1000000,
-                                     help="The maximum problem size (N) to evaluate for use. Default is 1000000")
+    parser_theoretical_optimal.add_argument("--max-prob-sizes", dest="max_prob_sizes", type=int, required=False, default=0,
+                                     help="The maximum problem size (N) to evaluate for use. Default will determine N based on available memory")
     parser_theoretical_optimal.add_argument("--prob-sizes-step", dest="prob_sizes_step", type=int, required=False, default=5000,
                                      help="The problem size (N) step size for theoretical evaluation. Default is 5000")
     parser_theoretical_optimal.set_defaults(func=run_theoretical_optimal)
