@@ -99,8 +99,8 @@ def setup_argparse() -> argparse.Namespace:
                                      help="The minimum problem size (N) to evaluate for use. Default is 1000")
     parser_theoretical_optimal.add_argument("--max-prob-sizes", dest="max_prob_sizes", type=int, required=False, default=0,
                                      help="The maximum problem size (N) to evaluate for use. Default will determine N based on available memory")
-    parser_theoretical_optimal.add_argument("--prob-sizes-step", dest="prob_sizes_step", type=int, required=False, default=5000,
-                                     help="The problem size (N) step size for theoretical evaluation. Default is 5000")
+    parser_theoretical_optimal.add_argument("--prob-sizes-step", dest="prob_sizes_step", type=int, required=False, default=1000,
+                                     help="The problem size (N) step size for theoretical evaluation. Default is 1000")
     parser_theoretical_optimal.set_defaults(func=run_theoretical_optimal)
 
     # Run ALL.
@@ -117,8 +117,8 @@ def setup_argparse() -> argparse.Namespace:
                                             default=1000000,
                                             help="The maximum problem size (N) to determine the theoretical max. Default is 1000000")
     parser_run_all.add_argument("--prob-sizes-step", dest="prob_sizes_step", type=int, required=False,
-                                            default=5000,
-                                            help="The problem size (N) step size for to determine the theoretical max. Default is 5000")
+                                            default=1000,
+                                            help="The problem size (N) step size for to determine the theoretical max. Default is 1000")
     parser_run_all.set_defaults(func=run_all_calcs)
 
     try:
