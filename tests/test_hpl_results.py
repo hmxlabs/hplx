@@ -41,9 +41,11 @@ class TestHplResults(unittest.TestCase):
         hpl_results.q = 4
         hpl_results.time = 111
         hpl_results.gflops = 1123
+        hpl_results.cpu_count = 4
+        hpl_results.type = "test"
 
         hpl_csv = hpl_results.to_csv()
-        expected = "1000,100,2,4,111,1123"
+        expected = "1000,100,2,4,111,1123,4,test"
 
         self.assertEqual(expected, hpl_csv, "The HplResults CSV output did not match the expected value")
 

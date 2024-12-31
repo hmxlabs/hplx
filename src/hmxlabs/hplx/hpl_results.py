@@ -110,7 +110,7 @@ class HplResult:
         return ret_dict
 
     def to_csv(self):
-        return f"{self.n},{self.nb},{self.p},{self.q},{self.time},{self.gflops}, {self.cpu_count}, {self.type}"
+        return f"{self.n},{self.nb},{self.p},{self.q},{self.time},{self.gflops},{self.cpu_count},{self.type}"
 
     @staticmethod
     def csv_header():

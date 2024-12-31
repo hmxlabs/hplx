@@ -135,9 +135,16 @@ class HplInputFileGenerator:
     def generate_possible_problem_sizes(available_memory: int, num_sizes: int = 10) -> [int]:
         max_problem_size = HplInputFileGenerator.calculate_max_problem_size(available_memory)
         # Bit of a random guess here but use 1/8th of the max problem size as the minimum to try and guess a range
-        min_problem_size = int(max_problem_size / 8)
+        min_problem_size = int(max_problem_size / num_sizes)
         if 1000 > min_problem_size:
             min_problem_size = 1000
+
+        if 1 == num_sizes:
+            return [max_problem_size]
+
+        if 2 == num_sizes:
+            return [min_problem_size, max_problem_size]
+
         step_size = int((max_problem_size - min_problem_size) / (num_sizes-1))
         return list(range(min_problem_size, max_problem_size, step_size))
 
@@ -149,11 +156,24 @@ class HplInputFileGenerator:
         min_nb = int(theoretical_best_block_size/4)
         max_nb = int(theoretical_best_block_size * 2)
 
+        if 32 > theoretical_best_block_size:
+            theoretical_best_block_size = 32
+        if 256 < theoretical_best_block_size:
+            theoretical_best_block_size = 256
+
         if 32 > min_nb:
             min_nb = 32
-
         if 256 < max_nb:
             max_nb = 256
+
+        if 1 == num_block_sizes:
+            return [theoretical_best_block_size]
+
+        if 2 == num_block_sizes:
+            return [min_nb, theoretical_best_block_size]
+
+        if 3 == num_block_sizes:
+            return [min_nb, theoretical_best_block_size, max_nb]
 
         step = int((max_nb-min_nb) / (num_block_sizes - 1))
         return list(range(min_nb, max_nb, step))

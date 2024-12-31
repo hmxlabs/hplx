@@ -24,10 +24,10 @@ class TestHplInputFileGenerator(unittest.TestCase):
 
     def test_generate_theoretical_best_params(self) -> None:
         cpu_count: int = 4
-        params = HplInputFileGenerator.generate_theoretical_best_inputs(4, 16)
+        params = HplInputFileGenerator.generate_theoretical_best_inputs(4, 16*(1024**3))
 
-        self.assertEqual(1000, params[0], "The value of N was not as expected")
-        self.assertEqual(31, params[1], "The value of NB was not as expected")
+        self.assertEqual(41000, params[0], "The value of N was not as expected")
+        self.assertEqual(202, params[1], "The value of NB was not as expected")
         self.assertEqual(2, params[2], "The value of P was not as expected")
         self.assertEqual(2, params[3], "The value of Q was not as expected")
 
