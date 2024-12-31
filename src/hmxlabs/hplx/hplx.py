@@ -98,7 +98,7 @@ def setup_argparse() -> argparse.Namespace:
     parser_theoretical_optimal.add_argument("--min-prob-sizes", dest="min_prob_sizes", type=int, required=False, default=1000,
                                      help="The minimum problem size (N) to evaluate for use. Default is 1000")
     parser_theoretical_optimal.add_argument("--max-prob-sizes", dest="max_prob_sizes", type=int, required=False, default=0,
-                                     help="The maximum problem size (N) to evaluate for use. Default will determine N based on available memory")
+                                     help="The maximum problem size (N) to evaluate for use. Default determined N based on available memory")
     parser_theoretical_optimal.add_argument("--prob-sizes-step", dest="prob_sizes_step", type=int, required=False, default=1000,
                                      help="The problem size (N) step size for theoretical evaluation. Default is 1000")
     parser_theoretical_optimal.set_defaults(func=run_theoretical_optimal)
@@ -114,8 +114,8 @@ def setup_argparse() -> argparse.Namespace:
                                             default=1000,
                                             help="The minimum problem size (N) to determine the theoretical max Default is 1000")
     parser_run_all.add_argument("--max-prob-sizes", dest="max_prob_sizes", type=int, required=False,
-                                            default=1000000,
-                                            help="The maximum problem size (N) to determine the theoretical max. Default is 1000000")
+                                            default=0,
+                                            help="The maximum problem size (N) to determine the theoretical max. Default determined N based on available memory")
     parser_run_all.add_argument("--prob-sizes-step", dest="prob_sizes_step", type=int, required=False,
                                             default=1000,
                                             help="The problem size (N) step size for to determine the theoretical max. Default is 1000")
@@ -390,7 +390,7 @@ def get_cpu_count(args) -> int:
     if args.use_smt:
         cpu_count = smt_on_cpus
 
-    logging.info(f"Using {cpu_count} CPUs. User SMT: {args.use_smt}. Physical CPU Cores: {smt_off_cpus}. Logical CPU Cores: {smt_on_cpus}")
+    logging.info(f"Using {cpu_count} CPUs. Use SMT: {args.use_smt}. Physical CPU Cores: {smt_off_cpus}. Logical CPU Cores: {smt_on_cpus}")
     return cpu_count
 
 if __name__ == "__main__":
