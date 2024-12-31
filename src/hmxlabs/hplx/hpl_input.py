@@ -58,14 +58,15 @@ class HplInputFileGenerator:
                                            available_memory: int,
                                            min_n: int = MIN_N,
                                            max_n:int = 0,
-                                           step_n:int = STEP_N) -> (int, int, int, int):
+                                           step_n:int = STEP_N,
+                                           prob_size_cap = 0) -> (int, int, int, int):
 
         # Assuming HPL will need 8 bytes per double precision element
         available_memory_gb = available_memory / (1024**3)
         double_precision_size = 8  # bytes per double
         memory_per_core_gb = available_memory_gb / cpu_count
         if 0 == max_n:
-            max_n = HplInputFileGenerator.calculate_max_problem_size(available_memory)
+            max_n = HplInputFileGenerator.calculate_max_problem_size(available_memory, prob_size_cap)
 
         best_params = None
         best_performance = 0
@@ -116,11 +117,15 @@ class HplInputFileGenerator:
 
 
     @staticmethod
-    def calculate_max_problem_size(available_memory: int) -> int:
+    def calculate_max_problem_size(available_memory: int, prob_size_cap:int = 0) -> int:
         # Apply a conservative estimate of 80% of memory can actually be used
         # without starving the system. Assume a double precision matrix and a double is 8 bytes
         num_doubles = available_memory*0.8 / 8
-        return int(math.sqrt(num_doubles))
+        max_prob_size = int(math.sqrt(num_doubles))
+        if 0 != prob_size_cap and max_prob_size > prob_size_cap:
+            max_prob_size = prob_size_cap
+
+        return max_prob_size;
 
 
     @staticmethod
@@ -132,8 +137,8 @@ class HplInputFileGenerator:
 
 
     @staticmethod
-    def generate_possible_problem_sizes(available_memory: int, num_sizes: int = 10) -> [int]:
-        max_problem_size = HplInputFileGenerator.calculate_max_problem_size(available_memory)
+    def generate_possible_problem_sizes(available_memory: int, num_sizes: int = 10, prob_size_cap: int = 0) -> [int]:
+        max_problem_size = HplInputFileGenerator.calculate_max_problem_size(available_memory, prob_size_cap)
         # Bit of a random guess here but use 1/8th of the max problem size as the minimum to try and guess a range
         min_problem_size = int(max_problem_size / num_sizes)
         if 1000 > min_problem_size:
@@ -182,8 +187,8 @@ class HplInputFileGenerator:
     def generate_input_file_calc_best_problem_size(available_memory: int, p: [int], q: [int], write_file: bool,
                                                    output_file: str,
                                                    num_prob_sizes: int = 10, num_block_sizes: int = 10,
-                                                   row_major: bool = True,) -> str:
-        problem_sizes = HplInputFileGenerator.generate_possible_problem_sizes(available_memory, num_prob_sizes)
+                                                   prob_size_cap = 0, row_major: bool = True) -> str:
+        problem_sizes = HplInputFileGenerator.generate_possible_problem_sizes(available_memory, num_prob_sizes, prob_size_cap)
         max_problem_size = problem_sizes[-1]
         block_sizes = HplInputFileGenerator.generate_possible_block_sizes(max_problem_size, num_block_sizes)
 

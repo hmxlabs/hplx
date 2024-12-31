@@ -46,6 +46,9 @@ def setup_argparse() -> argparse.Namespace:
     argparser.add_argument("--use-smt", dest="use_smt", required=False, type=bool, action=argparse.BooleanOptionalAction,
                            default=False, help="Use SMT (Hyperthreading) if available when counting CPUs. Default is False")
 
+    argparser.add_argument("--max-prob-size", dest="max_prob_size", required=False, type=int,
+                              default=0, help="A cap on the problem size to impose on any type of run")
+
     # Parse HPL output file
     subparsers = argparser.add_subparsers()
     parser_output = subparsers.add_parser("parse-results", help="Parse HPLinpack output files")
@@ -65,8 +68,8 @@ def setup_argparse() -> argparse.Namespace:
                                             default=1000,
                                             help="The minimum problem size (N) to evaluate for use. Default is 1000")
     parser_gen_input_tbest.add_argument("--max-prob-sizes", dest="max_prob_sizes", type=int, required=False,
-                                            default=1000000,
-                                            help="The maximum problem size (N) to evaluate for use. Default is 1000000")
+                                            default=0,
+                                            help="The maximum problem size (N) to evaluate for use. Default determined N based on available memory")
     parser_gen_input_tbest.add_argument("--prob-sizes-step", dest="prob_sizes_step", type=int, required=False,
                                             default=5000,
                                             help="The maximum problem size (N) step size for theoretical evaluation. Default is 5000")
@@ -190,7 +193,8 @@ def generate_input_tbest(args):
     hpl_dat_inputs = HplInputFileGenerator.generate_theoretical_best_inputs(cpu_count, available_memory,
                                                                             args.min_prob_sizes,
                                                                             args.max_prob_sizes,
-                                                                            args.prob_sizes_step)
+                                                                            args.prob_sizes_step,
+                                                                            args.max_prob_size)
 
     hpl_dat = HplInputFileGenerator.generate_input_file([hpl_dat_inputs[0]], [hpl_dat_inputs[1]],
                                                         [hpl_dat_inputs[2]],
@@ -221,7 +225,7 @@ def generate_input_calc_optimal(args) -> None:
     hpl_dat = HplInputFileGenerator.generate_input_file_calc_best_problem_size(available_memory, proc_grid[0],
                                                                                proc_grid[1], write_results_file,
                                                                                results_file, args.n_prob_sizes,
-                                                                               args.n_block_sizes)
+                                                                               args.n_block_sizes, args.max_prob_size)
     write_hpl_input_file(hpl_dat, output_file)
 
 
@@ -329,7 +333,8 @@ def _run_theoretical_optimal(args) -> list[HplResult]:
     logging.info(f"Creating HPL input file to determine theoretical best parameters...")
     hpl_dat_inputs = HplInputFileGenerator.generate_theoretical_best_inputs(cpu_count, available_memory,
                                                                             args.min_prob_sizes,
-                                                                            args.max_prob_sizes, args.prob_sizes_step)
+                                                                            args.max_prob_sizes, args.prob_sizes_step,
+                                                                            args.max_prob_size)
 
     hpl_dat = HplInputFileGenerator.generate_input_file([hpl_dat_inputs[0]], [hpl_dat_inputs[1]], [hpl_dat_inputs[2]],
                                                         [hpl_dat_inputs[3]], True, theoretical_max_file)
@@ -372,7 +377,7 @@ def _run_calc_optimal(args) -> list[HplResult]:
     hpl_dat = HplInputFileGenerator.generate_input_file_calc_best_problem_size(available_memory, [best_grid.p],
                                                                                [best_grid.q], True,
                                                                                prob_sizes_file, args.n_prob_sizes,
-                                                                               args.n_block_sizes)
+                                                                               args.n_block_sizes, args.max_prob_size)
     write_hpl_input_file(hpl_dat, input_file)
     prob_size_results = run_hpl(cpu_count, prob_sizes_file, "prob_size")
     all_results = proc_grid_results + prob_size_results

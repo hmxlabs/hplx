@@ -57,6 +57,17 @@ class TestHplInputFileGenerator(unittest.TestCase):
         self.assertLess(1000, sizes[0], "The value of N was not as expected")
         self.assertGreater(max_size, sizes[-1], "The largest problem size is greater than the maximum size")
 
+    def test_calculate_prob_size(self) -> None:
+        available_mem = 16 * (1024 ** 3)
+        prob_size = HplInputFileGenerator.calculate_max_problem_size(available_mem)
+        self.assertEqual(41448, prob_size, "The value of N was not as expected")
+
+    def test_calculate_prob_size_with_cap(self) -> None:
+        available_mem = 256 * (1024 ** 3)
+        max_prob_size = 30000
+        prob_size = HplInputFileGenerator.calculate_max_problem_size(available_mem, max_prob_size)
+        self.assertEqual(max_prob_size, prob_size, "The value of N was not as expected")
+
     def test_generate_block_sizes(self) -> None:
         available_mem = 16 * (1024 ** 3)
         prob_sizes  = HplInputFileGenerator.generate_possible_problem_sizes(available_mem)
