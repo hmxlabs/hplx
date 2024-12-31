@@ -34,14 +34,14 @@ class TestHplInputFileGenerator(unittest.TestCase):
         self.assertEqual(cpu_count, params[2]*params[3], "The value of P*Q was not as the cpu count")
 
     @parameterized.expand([
-                            ["case1", 4, 16],
-                            ["case2", 8, 32],
-                            ["case3", 16, 64],
-                            ["case4", 32, 128],
-                            ["case5", 64, 256],
-                            ["case6", 128, 512],
-                            ["case6a", 192, 512],
-                            ["case7", 256, 1024],
+                            ["case1", 4, 16*(1024**3)],
+                            ["case2", 8, 32*(1024**3)],
+                            ["case3", 16, 64*(1024**3)],
+                            ["case4", 32, 128*(1024**3)],
+                            ["case5", 64, 256*(1024**3)],
+                            ["case6", 128, 512*(1024**3)],
+                            ["case6a", 192, 512*(1024**3)],
+                            ["case7", 256, 1024*(1024**3)],
                         ])
     def test_generate_theoretical_best_params_ext(self, _, cpu_count: int, available_memory_gb: int) -> None:
         params = HplInputFileGenerator.generate_theoretical_best_inputs(cpu_count, available_memory_gb)
